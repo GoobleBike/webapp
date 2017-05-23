@@ -4,7 +4,7 @@ $params = require(__DIR__ . '/params.php');
 
 $config = [
     'id' => 'gooblebike',
-	'language' => 'it-IT',
+    'language' => 'it-IT',
     'basePath' => dirname(__DIR__),
     'bootstrap' => ['log'],
     'components' => [

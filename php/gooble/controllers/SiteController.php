@@ -49,8 +49,9 @@ class SiteController extends Controller
 
     public function actionIndex()
     {
-		$this->layout = 'gooble';
-		return $this->render('index');
+        return $this->redirect(['site/about']);
+//		$this->layout = 'gooble';
+//		return $this->render('index');
     }
 
     public function actionLogin()
@@ -93,5 +94,20 @@ class SiteController extends Controller
     public function actionAbout()
     {
         return $this->render('about');
+    }
+
+    public function actionGbsim()
+    {
+        return $this->render('gbsim');
+    }
+
+    public function actionWcsim()
+    {
+        return $this->render('wcsim');
+    }
+
+    public function actionGetall()
+    {
+        return $this->render('getall');
     }
 }

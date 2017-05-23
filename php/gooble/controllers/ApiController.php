@@ -2,6 +2,7 @@
 
 namespace app\controllers;
 
+use app\models\Config;
 use app\models\Stato;
 use app\models\Percorso;
 use app\models\Segmento;
@@ -9,9 +10,12 @@ use Yii;
 use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
 use yii\web\Controller;
+use \Datetime;
 
 class ApiController extends Controller
 {
+    private $config;//i parametri di config vengono caricati da init()
+    
     public function behaviors()
     {
         return [
@@ -47,52 +51,125 @@ class ApiController extends Controller
             ],
         ];
     }
+
+    public function init() {
+        //recupero da db i parametri di config
+        // es:
+        // {"gb":"0","me":"0","path":"1","wc":"0"} 
+        $model = Config::find()->all();
+        $this->config=[];
+        foreach ($model as $c){
+            $this->config[$c['conf_key']]=$c['conf_value'];
+        }
+        parent::init();
+    }
     
     /**
      * setVgetP?id=x&v=y[&f=z]
      * @return type
      */
-//    public function actionSetVGetP($id,$v,$f=null){
+    
+    /**
+     * set di velocità da parte della gb 
+     * setv_getp?id=x&v=y[&f=z]
+     * @param type $id gb id (gooblebike che chiama)
+     * @param type $v velocità in km/h
+     * @param type $f force : se !== null ignora id
+     * @return int output raw della pendenza (%)
+     */
     public function actionSetv_getp($id,$v,$f=null){
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_RAW;
+        if ($f===null){
+            //chek di id
+            if ($id != $this->config['gb']){
+                //id di gb non conforme
+                //restituisce uno 0
+                return 0;
+            }
+        }
+        //check passato oppure f !== null (force!)
 //        $model = Stato::findOne(['who' => 'gb', 'id' => $id, 'what' => 'v']);
-        $model = Stato::findOne(['who' => 'gb', 'id' => 0, 'what' => 'v']);
+        $model = Stato::findOne(['who' => 'gb', 'id' => $this->config['gb'], 'what' => 'v']);
         $model->how=$v;
 //        $model->how=10;
-        $model->ts=date("Y-m-d H:i:s");
+        $now=date("Y-m-d H:i:s");
+        $model->ts=$now;
         $model->save();
-        $model = Stato::findOne(['who' => 'wc', 'id' => 0, 'what' => 'p']);
+        $model = Stato::findOne(['who' => 'wc', 'id' => $this->config['wc'], 'what' => 'p']);
+        //verifica di timeout
+        $datetime1 = new DateTime($now);
+        $datetime2 = new DateTime($model->ts);
+        $diff=$datetime1->getTimestamp()-$datetime2->getTimestamp();
+        if ($diff > $this->config['wcto']){
+            //timeout!
+            $p=0;
+        }
+        else {
+            $p=$model->how;
+        }
         
-        $items=$model->how;
-        \Yii::$app->response->format = \yii\web\Response::FORMAT_RAW;
+        $items=$p;
         return $items;
     }
 
+    /**
+     * set di pendenza da parte del webclient
+     * setp_getv?id=x&p=y[&f=z]
+     * @param type $id wc id (webclient che chiama)
+     * @param type $p pendenza in percentuale
+     * @param type $f force : se !== null ignora id
+     * @return array output JSON di esito e responso
+     */
     public function actionSetp_getv($id,$p,$f=null){
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        if ($f===null){
+            //chek di id
+            if ($id != $this->config['wc']){
+                //id di wc non conforme
+                //restituisce ID n MISMATCH
+                $items=[
+                    'ck'=>"ID $id MISMATCH",
+                ];
+                //{ck=”esito”,resp={v:n}}
+                return $items;
+            }
+        }
+        //check passato oppure f !== null (force!)
 //        $model = Stato::findOne(['who' => 'gb', 'id' => $id, 'what' => 'v']);
-        $model = Stato::findOne(['who' => 'wc', 'id' => 0, 'what' => 'p']);
+        $model = Stato::findOne(['who' => 'wc', 'id' => $this->config['wc'], 'what' => 'p']);
         $model->how=$p;
 //        $model->how=-2;
-        $model->ts=date("Y-m-d H:i:s");
+        $now=date("Y-m-d H:i:s");        
+        $model->ts=$now;
         $model->save();
-        $model = Stato::findOne(['who' => 'gb', 'id' => 0, 'what' => 'v']);
-//        $items=$model->how;
+        $model = Stato::findOne(['who' => 'gb', 'id' => $this->config['gb'], 'what' => 'v']);
+        //verifica di timeout
+        $datetime1 = new DateTime($now);
+        $datetime2 = new DateTime($model->ts);
+        $diff=$datetime1->getTimestamp()-$datetime2->getTimestamp();
+        if ($diff > $this->config['gbto']){
+            //timeout!
+            $v="UNKNOWN";
+        }
+        else {
+            $v=$model->how;
+        }
         $items=[
             'ck'=>'OK',
             'resp'=>[
-                'v'=>$model->how,
+                'v'=>$v,
             ]
         ];
         //{ck=”esito”,resp={v:n}}
-        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         return $items;
     }
 
 //    public function actionGetp_getv(){
     public function actionGetstato(){
 //        $model = Stato::findOne(['who' => 'gb', 'id' => $id, 'what' => 'v']);
-        $model = Stato::findOne(['who' => 'wc', 'id' => 0, 'what' => 'p']);
+        $model = Stato::findOne(['who' => 'wc', 'id' => $this->config['wc'], 'what' => 'p']);
         $p=$model->how;
-        $model = Stato::findOne(['who' => 'gb', 'id' => 0, 'what' => 'v']);
+        $model = Stato::findOne(['who' => 'gb', 'id' => $this->config['gb'], 'what' => 'v']);
 //        $items=$model->how;
         $items=[
             'ck'=>'OK',
@@ -112,6 +189,23 @@ class ApiController extends Controller
 //        $items=$model->how;
         $items=[
             'ck'=>'OK',
+            'resp'=>[
+                'stato'=>$model,
+                'config'=>  $this->config,
+                ],
+        ];
+        //{ck=”esito”,resp={v:n}}
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        return $items;
+    }
+
+    public function actionGetconf(){
+//        $model = Stato::findOne(['who' => 'gb', 'id' => $id, 'what' => 'v']);
+//        $model = Config::find()->all();
+        $model = $this->config;
+//        $items=$model->how;
+        $items=[
+            'ck'=>'OK',
             'resp'=>$model,
         ];
         //{ck=”esito”,resp={v:n}}
@@ -119,9 +213,29 @@ class ApiController extends Controller
         return $items;
     }
 
-    public function actionGetpath(){
+    /**
+     * richiesta di path
+     * @param type $id wc id (webclient che chiama)
+     * @param type $f force : se !== null ignora id
+     * @return array output JSON di esito e responso
+     */
+    public function actionGetpath($id,$f=null){
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        if ($f===null){
+            //chek di id
+            if ($id != $this->config['wc']){
+                //id di wc non conforme
+                //restituisce ID n MISMATCH
+                $items=[
+                    'ck'=>"ID $id MISMATCH",
+                ];
+                //{ck=”esito”,resp={v:n}}
+                return $items;
+            }
+        }
+        //check passato oppure f !== null (force!)
 //        $model = Stato::findOne(['who' => 'gb', 'id' => $id, 'what' => 'v']);
-        $percorso = Percorso::findOne(['id' => 1]);
+        $percorso = Percorso::findOne(['id' => $this->config['path']]);
         $segmenti = $percorso->getSegmentos()
             ->orderBy('progr')
             ->all();
@@ -149,7 +263,6 @@ class ApiController extends Controller
             ]
         ];
         //{ck=”esito”,resp={v:n}}
-        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         return $items;
     }
 
