@@ -12,6 +12,11 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <div>
     <div id="totale" style="font-size: 150px;">...connecting</div>
+    <div id="edit" style="font-size: xx-large">Stato inviato:
+        <button id="minus" >-</button>
+        <input id="stato" value="10" readonly="readonly" />
+        <button id="plus" >+</button>
+    </div>
     <div id="orologio" style="font-size: xx-large"></div>
 </div>
     
@@ -32,7 +37,8 @@ function eachSecond() {
         //chiamata ajax per aggiornare totale
         $.ajax({
             dataType: 'json',
-            url: "<?= yii\helpers\Url::to(['api/setp_getv','id'=>0,'p'=>15,'f'=>1],true) ?>"
+//            url: "<?= yii\helpers\Url::to(['api/setp_getv','id'=>0,'p'=>15,'f'=>1],true) ?>"
+            url: "<?= yii\helpers\Url::to(['api/setp_getv','id'=>0],true) ?>"+"&p="+$("#stato").val()+"&f=1"
     //        beforeSend: function ( xhr ) {
     //          xhr.overrideMimeType("text/plain; charset=x-user-defined");
     //        }
@@ -45,4 +51,18 @@ function eachSecond() {
         });
 //    }
 }    
+$("#plus").click(function(){
+    s=eval($("#stato").val());
+    if (s<30){
+        s++;
+    }    
+    $("#stato").val(s);
+});
+$("#minus").click(function(){
+    s=eval($("#stato").val());
+    if (s>0){
+        s--;
+    }    
+    $("#stato").val(s);
+});
 </script>
