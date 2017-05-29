@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: 127.0.0.1
--- Creato il: Mag 23, 2017 alle 08:46
+-- Creato il: Mag 28, 2017 alle 10:48
 -- Versione del server: 10.1.19-MariaDB
 -- Versione PHP: 5.6.28
 
@@ -43,6 +43,36 @@ INSERT INTO `config` (`conf_key`, `conf_value`, `conf_des`) VALUES
 ('path', '1', 'path id'),
 ('wc', '0', 'web client id'),
 ('wcto', '4', 'web client timeout');
+
+-- --------------------------------------------------------
+
+--
+-- Struttura della tabella `log`
+--
+
+CREATE TABLE `log` (
+  `id` int(11) NOT NULL,
+  `lid` int(11) NOT NULL,
+  `lkey` varchar(255) NOT NULL,
+  `lvalue` varchar(5000) NOT NULL,
+  `ts` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Struttura della tabella `logstato`
+--
+
+CREATE TABLE `logstato` (
+  `log_id` int(11) NOT NULL,
+  `who` varchar(255) NOT NULL,
+  `id` int(11) NOT NULL,
+  `what` varchar(255) NOT NULL,
+  `how` varchar(255) NOT NULL,
+  `ts` datetime NOT NULL,
+  `note` varchar(255) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -105,8 +135,8 @@ CREATE TABLE `stato` (
 --
 
 INSERT INTO `stato` (`who`, `id`, `what`, `how`, `ts`) VALUES
-('gb', 0, 'v', '10', '2017-05-23 08:45:44'),
-('wc', 0, 'p', '15', '2017-05-23 08:42:27');
+('gb', 0, 'v', '10', '2017-05-28 10:24:14'),
+('wc', 0, 'p', '-3', '2017-05-27 10:19:01');
 
 --
 -- Indici per le tabelle scaricate
@@ -117,6 +147,18 @@ INSERT INTO `stato` (`who`, `id`, `what`, `how`, `ts`) VALUES
 --
 ALTER TABLE `config`
   ADD PRIMARY KEY (`conf_key`);
+
+--
+-- Indici per le tabelle `log`
+--
+ALTER TABLE `log`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indici per le tabelle `logstato`
+--
+ALTER TABLE `logstato`
+  ADD PRIMARY KEY (`log_id`);
 
 --
 -- Indici per le tabelle `percorso`
@@ -141,6 +183,16 @@ ALTER TABLE `stato`
 -- AUTO_INCREMENT per le tabelle scaricate
 --
 
+--
+-- AUTO_INCREMENT per la tabella `log`
+--
+ALTER TABLE `log`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+--
+-- AUTO_INCREMENT per la tabella `logstato`
+--
+ALTER TABLE `logstato`
+  MODIFY `log_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=75122;
 --
 -- AUTO_INCREMENT per la tabella `percorso`
 --

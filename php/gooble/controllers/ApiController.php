@@ -6,6 +6,7 @@ use app\models\Config;
 use app\models\Stato;
 use app\models\Percorso;
 use app\models\Segmento;
+use app\models\Logstato;
 use Yii;
 use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
@@ -79,11 +80,23 @@ class ApiController extends Controller
      */
     public function actionSetv_getp($id,$v,$f=null){
         \Yii::$app->response->format = \yii\web\Response::FORMAT_RAW;
+        $now=date("Y-m-d H:i:s");        
+        //log
+        $log=new \app\models\Logstato();
+        $log->who='gb';
+        $log->id=$id;
+        $log->what='v';
+        $log->how=$v;
+        $log->ts=$now;
+        $log->note=$f===null?'':"FORCE";
         if ($f===null){
             //chek di id
             if ($id != $this->config['gb']){
                 //id di gb non conforme
-                //restituisce uno 0
+                //salva log
+                $log->note="MISMATCH";
+                $log->save();
+                 //restituisce uno 0
                 return 0;
             }
         }
@@ -92,9 +105,10 @@ class ApiController extends Controller
         $model = Stato::findOne(['who' => 'gb', 'id' => $this->config['gb'], 'what' => 'v']);
         $model->how=$v;
 //        $model->how=10;
-        $now=date("Y-m-d H:i:s");
         $model->ts=$now;
         $model->save();
+        //log
+        $log->save();
         $model = Stato::findOne(['who' => 'wc', 'id' => $this->config['wc'], 'what' => 'p']);
         //verifica di timeout
         $datetime1 = new DateTime($now);
@@ -122,6 +136,15 @@ class ApiController extends Controller
      */
     public function actionSetp_getv($id,$p,$f=null){
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $now=date("Y-m-d H:i:s");        
+        //log
+        $log=new \app\models\Logstato();
+        $log->who='wc';
+        $log->id=$id;
+        $log->what='p';
+        $log->how=$p;
+        $log->ts=$now;
+        $log->note=$f===null?'':"FORCE";
         if ($f===null){
             //chek di id
             if ($id != $this->config['wc']){
@@ -131,6 +154,9 @@ class ApiController extends Controller
                     'ck'=>"ID $id MISMATCH",
                 ];
                 //{ck=”esito”,resp={v:n}}
+                //salva log
+                $log->note="MISMATCH";
+                $log->save();
                 return $items;
             }
         }
@@ -142,6 +168,8 @@ class ApiController extends Controller
         $now=date("Y-m-d H:i:s");        
         $model->ts=$now;
         $model->save();
+        //log
+        $log->save();
         $model = Stato::findOne(['who' => 'gb', 'id' => $this->config['gb'], 'what' => 'v']);
         //verifica di timeout
         $datetime1 = new DateTime($now);
@@ -266,6 +294,19 @@ class ApiController extends Controller
         return $items;
     }
 
+    public function actionPing() {
+        return "OK";
+    }
+
+    public function actionSd() {
+//        $command='SHUTDOWN /s /t 05 /c "Shutdown in progress, leave the vicinity immediately"';
+//        $command='msg * /TIME:10 Let\'s meet at 1PM today';
+        $command='wscript msg.vbs';
+        system($command);
+        return "OK";
+    }
+
+    
 /*
  * promemoria: doc su come impostare output di vario formato
  * https://github.com/samdark/yii2-cookbook/blob/master/book/response-formats.md
