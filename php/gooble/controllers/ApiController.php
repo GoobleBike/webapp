@@ -52,7 +52,13 @@ class ApiController extends Controller
             ],
         ];
     }
-
+    
+    public function beforeAction($action) 
+    { 
+        $this->enableCsrfValidation = false; 
+        return parent::beforeAction($action); 
+    }
+    
     public function init() {
         //recupero da db i parametri di config
         // es:
@@ -295,15 +301,44 @@ class ApiController extends Controller
     }
 
     public function actionPing() {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_RAW;
         return "OK";
     }
 
+    /**
+     * api di shutdown del computer
+     * @return string
+     */
     public function actionSd() {
-//        $command='SHUTDOWN /s /t 05 /c "Shutdown in progress, leave the vicinity immediately"';
-//        $command='msg * /TIME:10 Let\'s meet at 1PM today';
-        $command='wscript msg.vbs';
-        system($command);
-        return "OK";
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_RAW;
+        $p = isset($_POST['p']) ? $_POST['p'] : null;
+        if ($p=='SpegnitiGooble'){
+            $command='SHUTDOWN /s /t 05 /c "Shutdown in progress, leave the vicinity immediately"';
+//            $command='wscript msg.vbs';
+            system($command);
+            return "OK";
+        }
+        else {
+            return 'KO';
+        }
+    }
+
+    /**
+     * api di reboot del computer
+     * @return string
+     */
+    public function actionRb() {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_RAW;
+        $p = isset($_POST['p']) ? $_POST['p'] : null;
+        if ($p=='SpegnitiGooble'){
+            $command='SHUTDOWN /r /t 05 /c "Reboot in progress, leave the vicinity immediately"';
+//            $command='wscript msg.vbs';
+            system($command);
+            return "OK";
+        }
+        else {
+            return 'KO';
+        }
     }
 
     

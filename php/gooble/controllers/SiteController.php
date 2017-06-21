@@ -110,4 +110,8 @@ class SiteController extends Controller
     {
         return $this->render('getall');
     }
+    
+    public function actionSdtest(){
+        return $this->render('sdtest');
+    }
 }
