@@ -1,6 +1,6 @@
 # index files
-/index.php
-/index-test.php
+#/index.php
+#/index-test.php
 
 # phpstorm project files
 .idea
@@ -17,7 +17,7 @@ nbproject
 Thumbs.db
 
 # composer vendor dir
-/vendor
+#/vendor
 
 # composer itself is not needed
 composer.phar
