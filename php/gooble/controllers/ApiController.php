@@ -313,8 +313,13 @@ class ApiController extends Controller
         \Yii::$app->response->format = \yii\web\Response::FORMAT_RAW;
         $p = isset($_POST['p']) ? $_POST['p'] : null;
         if ($p=='SpegnitiGooble'){
-            $command='SHUTDOWN /s /t 05 /c "Shutdown in progress, leave the vicinity immediately"';
-//            $command='wscript msg.vbs';
+			if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+				//echo 'This is a server using Windows!';
+				$command='SHUTDOWN /s /t 05 /c "Shutdown in progress, leave the vicinity immediately"';
+			} else {
+				//echo 'This is a server not using Windows!';
+				$command='shutdown -h -t 5  "Shutdown in progress, leave the vicinity immediately"';
+			}
             system($command);
             return "OK";
         }
@@ -331,8 +336,13 @@ class ApiController extends Controller
         \Yii::$app->response->format = \yii\web\Response::FORMAT_RAW;
         $p = isset($_POST['p']) ? $_POST['p'] : null;
         if ($p=='SpegnitiGooble'){
-            $command='SHUTDOWN /r /t 05 /c "Reboot in progress, leave the vicinity immediately"';
-//            $command='wscript msg.vbs';
+			if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+				//echo 'This is a server using Windows!';
+				$command='SHUTDOWN /r /t 05 /c "Reboot in progress, leave the vicinity immediately"';
+			} else {
+				//echo 'This is a server not using Windows!';
+				$command='shutdown -r -t 5  "Shutdown in progress, leave the vicinity immediately"';
+			}
             system($command);
             return "OK";
         }
